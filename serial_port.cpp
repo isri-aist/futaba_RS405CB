@@ -1,5 +1,8 @@
 #include <iostream>
+#include <string.h>
 #include "serial_port.h"
+
+//#define VERBOSE
 
 SerialPort::SerialPort(const char *device_name, const int baudrate) : opened(false)
 {
@@ -65,6 +68,13 @@ SerialPort::~SerialPort()
 
 int SerialPort::writeData(std::vector<unsigned char> data)
 {
+#ifdef VERBOSE
+        std::cout << "send["  << data.size() << "]:";
+	for (unsigned int i=0; i<data.size(); i++){
+	        printf("%02x ", data[i]);
+	}
+	printf("\n");
+#endif
 	if(opened)
 		return write(fd, data.data(), data.size());
 	else
@@ -76,6 +86,13 @@ int SerialPort::readData(std::vector<unsigned char> &data)
 	if(opened) {
 		unsigned char buf[1024];
 		const int ret = read(fd, buf, sizeof(buf));
+#ifdef VERBOSE
+		std::cout << "recv[" << ret << "]:";
+		for (int i=0; i<ret; i++){
+		        printf("%02x ", buf[i]);
+		}
+		printf("\n");
+#endif
 		data = std::vector<unsigned char>(buf, buf + ret);
 		return ret;
 	} else {
