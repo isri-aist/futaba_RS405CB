@@ -34,6 +34,13 @@ int RS405CB::sendShortPacket(const int id, unsigned char flag, unsigned char add
 	return sendShortPacket(id, flag, address, length, count, data);
 }
 
+int RS405CB::readACK()
+{
+  std::vector<unsigned char> recv_buf;
+  const int len = port.readData(recv_buf);
+  return len;
+}
+
 int RS405CB::sendShortPacket(const int id, unsigned char flag, unsigned char address, unsigned char length, unsigned char count, std::vector<unsigned char> data)
 {
 	if(length != 0x00 && length != 0xff) {
@@ -63,6 +70,7 @@ int RS405CB::sendShortPacket(const int id, unsigned char flag, unsigned char add
 	buf.push_back(check_sum);
 
 	const int write_len = port.writeData(buf);
+
 	return write_len;
 }
 
@@ -114,10 +122,12 @@ int RS405CB::receivePacket(std::vector<unsigned char> &data)
 				std::cerr << "error. flash writing error" << std::endl;
 				return 2;
 			}
+#if 0
 			if(flags & 0x02) {
 				std::cerr << "error. invalid packet received" << std::endl;
 				return 2;
 			}
+#endif
 		}
 		int data_length = recv_buf[5];
 		for(int i = 0; i < data_length; i++) {
@@ -189,7 +199,9 @@ int RS405CB::setTorque(const int id, bool torque_on)
 	} else {
 		data.push_back(0x00);
 	}
-	return sendShortPacket(id, 0x00, 0x24, 0x01, 0x01, data);
+	const int ret = sendShortPacket(id, 0x01, 0x24, 0x01, 0x01, data);
+	readACK();
+	return ret;
 }
 
 int RS405CB::setAngle(const int id, double angle)
@@ -201,7 +213,9 @@ int RS405CB::setAngle(const int id, double angle)
 	short angle_int = static_cast<signed short>(angle);
 	data.push_back(angle_int & 0xff);
 	data.push_back(angle_int >> 8);
-	return sendShortPacket(id, 0x00, 0x1e, 0x02, 0x01, data);
+	const int ret = sendShortPacket(id, 0x01, 0x1e, 0x02, 0x01, data);
+	readACK();
+	return ret;
 }
 
 int RS405CB::setAngles(std::vector<std::pair<int, double>> angles)

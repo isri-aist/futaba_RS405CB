@@ -140,6 +140,8 @@ public:
 	 *   need to reboot after change baudrate
 	 */
 	int setBaudrate(const int, const RS405CB_BAUDRATE);
+
+	int readACK();
 private:
 	SerialPort port;
 	int sendShortPacket(const int, unsigned char, unsigned char, unsigned char, unsigned char);
