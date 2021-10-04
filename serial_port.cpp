@@ -13,6 +13,7 @@ SerialPort::SerialPort(const char *device_name, const int baudrate) : opened(fal
 		opened = true;
 
 		struct termios tio;
+		bzero(&tio, sizeof(tio));
 		tio.c_cflag += CREAD; // enable receive
 		tio.c_cflag += CLOCAL; // local line (no modem)
 		tio.c_cflag += CS8; // data bit: 8bits
