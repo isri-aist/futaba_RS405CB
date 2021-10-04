@@ -11,7 +11,7 @@ set(sources
   RS405CB.cpp
   )
 
-set(target librs405cb)
+set(target rs405cb)
 add_library(${target} SHARED ${sources})
 
 install(FILES ${headers} DESTINATION include)
