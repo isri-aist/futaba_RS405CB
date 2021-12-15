@@ -187,7 +187,7 @@ double RS405CB::getAngle(const int id)
 		return 0.0;
 	}
 
-	const double angle = ((recv_data[1] << 8) | recv_data[0]) / 10.0;
+	const double angle = ((short)((recv_data[1] << 8) | recv_data[0])) / 10.0;
 	return angle;
 }
 
