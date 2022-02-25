@@ -18,6 +18,7 @@ public:
 	~SerialPort();
 	int writeData(std::vector<unsigned char>);
 	int readData(std::vector<unsigned char> &);
+	bool isOpen() { return opened; }
 private:
 	int fd;
 	bool opened;
