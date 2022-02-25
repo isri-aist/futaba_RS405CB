@@ -145,7 +145,7 @@ double RS405CB::getVoltage(const int id)
 	// get number from 42 to 59 of memory map
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x09, 0x00, 0x00, 0x01);
 	if(result != 0) {
-		return 0.0;
+		return std::numeric_limits<double>::quiet_NaN();
 	}
 
 	const double voltage = ((recv_data[11] << 8) | recv_data[10]) / 100.0;
@@ -184,7 +184,7 @@ double RS405CB::getAngle(const int id)
 	// get number from 42 to 59 of memory map
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x09, 0x00, 0x00, 0x01);
 	if(result != 0) {
-		return 0.0;
+		return std::numeric_limits<double>::quiet_NaN();
 	}
 
 	const double angle = ((short)((recv_data[1] << 8) | recv_data[0])) / 10.0;
