@@ -142,6 +142,7 @@ public:
 	int setBaudrate(const int, const RS405CB_BAUDRATE);
 
 	int readACK();
+	bool isOpen() { return port.isOpen(); }
 private:
 	SerialPort port;
 	int sendShortPacket(const int, unsigned char, unsigned char, unsigned char, unsigned char);
