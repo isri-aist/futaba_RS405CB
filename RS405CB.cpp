@@ -312,3 +312,12 @@ int RS405CB::setBaudrate(const int id, const RS405CB_BAUDRATE baudrate)
 	return sendShortPacket(id, 0x00, 0x06, 0x01, 0x01, data);
 }
 
+int RS405CB::setMaxTorque(const int id, const unsigned char percentage)
+{
+        std::vector<unsigned char> data(1, percentage);
+
+	const int ret = sendShortPacket(id, 0x00, 0x23, 0x01, 0x01, data);
+	readACK();
+	return ret;
+}
+

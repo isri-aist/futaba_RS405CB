@@ -141,6 +141,8 @@ public:
 	 */
 	int setBaudrate(const int, const RS405CB_BAUDRATE);
 
+        int setMaxTorque(const int, const unsigned char);
+
 	int readACK();
 	bool isOpen() { return port.isOpen(); }
 private:
