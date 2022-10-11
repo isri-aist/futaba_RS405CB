@@ -25,7 +25,7 @@ set(sources
 
 set(target rs405cb)
 add_library(${target} SHARED ${sources})
-target_include_directories(${target} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include/RS405CB>)
+target_include_directories(${target} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/RS405CB>)
 set_target_properties(${target} PROPERTIES EXPORT_NAME ${PROJECT_NAME})
 
 install(FILES ${headers} DESTINATION include/RS405CB)
