@@ -27,6 +27,13 @@ public:
 	~RS405CB();
 
 	/*
+	 * get temperature limit that turns of the servo
+	 * return: temperature limit. unit is degree [C]
+	 * argument: servo id
+	 */
+	int getTemperatureLimit(const int);
+
+	/*
 	 * get current voltage
 	 * return: current voltage. unit is volt [V]
 	 * argument: servo id
@@ -55,6 +62,13 @@ public:
 	 *   false: torque off
 	 */
 	int setTorque(const int, bool);
+
+        /*
+	 * get torque enable
+	 * return: condition of servo's torque: 0 for torque OFF, 1 for torque ON, 2 for break mode
+	 * argument: servo id
+	 */
+        int getTorqueEnable(const int);
 
 	/*
 	 * get current angle
@@ -153,6 +167,13 @@ private:
 	int sendAndReceiveShortPacket(const int, std::vector<unsigned char> &, unsigned char, unsigned char, unsigned char, unsigned char);
 	int sendLongPacket(unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
 	int receivePacket(std::vector<unsigned char> &);
+
+	bool isTemperatureLimit() { return flags & 0x80; }
+	bool isTemperatureAlarm() { return flags & 0x20; }
+
+private:
+
+	unsigned char flags;
 };
 
 #endif
