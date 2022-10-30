@@ -16,6 +16,7 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 set(headers
   serial_port.h
   RS405CB.h
+  rs405cb_types.h
   )
 
 set(sources

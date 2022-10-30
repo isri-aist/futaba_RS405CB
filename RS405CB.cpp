@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <memory.h>
 #include <iostream>
 #include <algorithm>
 #include "RS405CB.h"
@@ -137,6 +138,17 @@ int RS405CB::receivePacket(std::vector<unsigned char> &data)
 	} else {
 		return 3;
 	}
+}
+
+RS405CB_t RS405CB::getDataFromMemoryMap(const int id)
+{
+        std::vector<unsigned char> recv_data;
+        // get data from 0 (0x00) to 59 (0x3B) of memory map; that is, a length of 60 (0x3C)
+
+        const int result = sendAndReceiveShortPacket(id, recv_data, 0x0F, 0x00, 0x3C, 0x00);
+        RS405CB_t regs;
+        memcpy(regs.BYTE, recv_data.data(), 60*sizeof(unsigned char));
+        return regs;
 }
 
 int RS405CB::getTemperatureLimit(const int id)

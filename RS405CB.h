@@ -4,6 +4,7 @@
 #include <vector>
 #include <utility>
 #include "serial_port.h"
+#include "rs405cb_types.h"
 
 enum RS405CB_BAUDRATE
 {
@@ -26,6 +27,13 @@ public:
 	RS405CB(const char *, const int);
 	~RS405CB();
 
+        /*
+         * get the whole memory map of the servo
+         * return: structure with read data
+         * argument: servo id
+         */
+        RS405CB_t getDataFromMemoryMap(const int);
+        
 	/*
 	 * get temperature limit that turns of the servo
 	 * return: temperature limit. unit is degree [C]
