@@ -31,3 +31,8 @@ set_target_properties(${target} PROPERTIES EXPORT_NAME ${PROJECT_NAME})
 install(FILES ${headers} DESTINATION include/RS405CB)
 install(TARGETS ${target} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
+add_executable(reboot_rs405cb reboot.cpp)
+target_link_libraries(reboot_rs405cb PUBLIC rs405cb)
+install(TARGETS reboot_rs405cb
+  EXPORT ${TARGETS_EXPORT_NAME}
+  RUNTIME DESTINATION bin)
