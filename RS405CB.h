@@ -168,12 +168,14 @@ private:
 	int sendLongPacket(unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
 	int receivePacket(std::vector<unsigned char> &);
 
-	bool isTemperatureLimit() { return flags & 0x80; }
+public:
+	
+	bool isTemperatureError() { return flags & 0x80; }
 	bool isTemperatureAlarm() { return flags & 0x20; }
 
 private:
 
-	unsigned char flags;
+	unsigned char flags;  // ToDo: associate it with id
 };
 
 #endif

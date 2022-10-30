@@ -143,12 +143,14 @@ int RS405CB::getTemperatureLimit(const int id)
 {
 	std::vector<unsigned char> recv_data;
 	// get number from 0 to 29 of memory map
+	
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x03, 0x00, 0x00, 0x01);
 	if(result != 0) {
 		return 0.0;
 	}
 
 	const int temperature_limit = (recv_data[15] << 8) | recv_data[14];
+	
 	return temperature_limit;
 }
 
@@ -303,7 +305,7 @@ int RS405CB::storeDataToROM(const int id)
 int RS405CB::reboot(const int id)
 {
 	const int ret = sendShortPacket(id, 0x20, 0xff, 0x00, 0x00);
-        readACK();
+	sleep(1);
         return ret;
 }
 
