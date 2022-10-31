@@ -4,6 +4,7 @@
 #include <vector>
 #include <utility>
 #include "serial_port.h"
+#include "rs405cb_types.h"
 
 enum RS405CB_BAUDRATE
 {
@@ -25,6 +26,27 @@ class RS405CB
 public:
 	RS405CB(const char *, const int);
 	~RS405CB();
+
+        /*
+         * get the ROM memory map of the servo
+         * return: structure with read data
+         * argument: servo id
+         */
+        ROM getDataFromROM(const int);
+
+        /*
+         * get the RAM memory map of the servo
+         * return: structure with read data
+         * argument: servo id
+         */
+        RAM getDataFromRAM(const int);
+        
+	/*
+	 * get temperature limit that turns of the servo
+	 * return: temperature limit. unit is degree [C]
+	 * argument: servo id
+	 */
+	int getTemperatureLimit(const int);
 
 	/*
 	 * get current voltage
@@ -55,6 +77,13 @@ public:
 	 *   false: torque off
 	 */
 	int setTorque(const int, bool);
+
+        /*
+	 * get torque enable
+	 * return: condition of servo's torque: 0 for torque OFF, 1 for torque ON, 2 for break mode
+	 * argument: servo id
+	 */
+        int getTorqueEnable(const int);
 
 	/*
 	 * get current angle
@@ -153,6 +182,15 @@ private:
 	int sendAndReceiveShortPacket(const int, std::vector<unsigned char> &, unsigned char, unsigned char, unsigned char, unsigned char);
 	int sendLongPacket(unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
 	int receivePacket(std::vector<unsigned char> &);
+
+public:
+	
+	bool isTemperatureError() { return flags & 0x80; }
+	bool isTemperatureAlarm() { return flags & 0x20; }
+
+private:
+
+	unsigned char flags;  // ToDo: associate it with id
 };
 
 #endif

@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <memory.h>
 #include <iostream>
 #include <algorithm>
 #include "RS405CB.h"
@@ -109,14 +110,14 @@ int RS405CB::receivePacket(std::vector<unsigned char> &data)
 		if(recv_buf[0] != 0xFD || recv_buf[1] != 0xDF) {
 			return 1;
 		}
-		const unsigned char flags = recv_buf[3];
+		flags = recv_buf[3];
 		if(flags != 0) {
 			if(flags & 0x80) {
-				std::cerr << "error. tempeature limit" << std::endl;
+				std::cerr << "error. temperature limit" << std::endl;
 				return 2;
 			}
 			if(flags & 0x20) {
-				std::cerr << "warning. tempeature alarm" << std::endl;
+				std::cerr << "warning. temperature alarm" << std::endl;
 			}
 			if(flags & 0x08) {
 				std::cerr << "error. flash writing error" << std::endl;
@@ -137,6 +138,49 @@ int RS405CB::receivePacket(std::vector<unsigned char> &data)
 	} else {
 		return 3;
 	}
+}
+
+ROM RS405CB::getDataFromROM(const int id)
+{
+        std::vector<unsigned char> recv_data;
+        // get data from 0 (0x00) to 29 (0x1D) of memory map; that is, the ROM
+	
+	const int result = sendAndReceiveShortPacket(id, recv_data, 0x03, 0x00, 0x00, 0x01);
+	if (result != 0) {
+	  std::cerr << "error getting data from memory map" << std::endl;
+	}
+        ROM regs;
+	memcpy(regs.BYTE, recv_data.data(), 30*sizeof(unsigned char));
+        return regs;
+}
+
+RAM RS405CB::getDataFromRAM(const int id)
+{
+        std::vector<unsigned char> recv_data;
+        // get data from 30 (0x1E) to 59 (0x3B) of memory map; that is, the RAM
+	
+	const int result = sendAndReceiveShortPacket(id, recv_data, 0x05, 0x00, 0x00, 0x01);
+	if (result != 0) {
+	  std::cerr << "error getting data from memory map" << std::endl;
+	}
+        RAM regs;
+	memcpy(regs.BYTE, recv_data.data(), 30*sizeof(unsigned char));
+        return regs;
+}
+
+int RS405CB::getTemperatureLimit(const int id)
+{
+	std::vector<unsigned char> recv_data;
+	// get number from 0 to 29 of memory map
+	
+	const int result = sendAndReceiveShortPacket(id, recv_data, 0x03, 0x00, 0x00, 0x01);
+	if(result != 0) {
+		return 0.0;
+	}
+
+	const int temperature_limit = (recv_data[15] << 8) | recv_data[14];
+	
+	return temperature_limit;
 }
 
 double RS405CB::getVoltage(const int id)
@@ -202,6 +246,19 @@ int RS405CB::setTorque(const int id, bool torque_on)
 	const int ret = sendShortPacket(id, 0x01, 0x24, 0x01, 0x01, data);
 	readACK();
 	return ret;
+}
+
+int RS405CB::getTorqueEnable(const int id)
+{
+	std::vector<unsigned char> recv_data;
+	// get number from 30 to 41 of memory map
+	const int result = sendAndReceiveShortPacket(id, recv_data, 0x0B, 0x00, 0x00, 0x01);
+	if(result != 0) {
+		return 0.0;
+	}
+
+	const int torque_enable = recv_data[6];
+	return torque_enable;
 }
 
 int RS405CB::setAngle(const int id, double angle)
@@ -276,7 +333,9 @@ int RS405CB::storeDataToROM(const int id)
 
 int RS405CB::reboot(const int id)
 {
-	return sendShortPacket(id, 0x20, 0xff, 0x00, 0x00);
+	const int ret = sendShortPacket(id, 0x20, 0xff, 0x00, 0x00);
+	sleep(1);
+        return ret;
 }
 
 int RS405CB::resetMemoryMap(const int id)
