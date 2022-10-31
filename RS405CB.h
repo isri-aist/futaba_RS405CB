@@ -28,11 +28,18 @@ public:
 	~RS405CB();
 
         /*
-         * get the whole memory map of the servo
+         * get the ROM memory map of the servo
          * return: structure with read data
          * argument: servo id
          */
-        RS405CB_t getDataFromMemoryMap(const int);
+        ROM getDataFromROM(const int);
+
+        /*
+         * get the RAM memory map of the servo
+         * return: structure with read data
+         * argument: servo id
+         */
+        RAM getDataFromRAM(const int);
         
 	/*
 	 * get temperature limit that turns of the servo

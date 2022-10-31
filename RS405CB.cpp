@@ -140,14 +140,31 @@ int RS405CB::receivePacket(std::vector<unsigned char> &data)
 	}
 }
 
-RS405CB_t RS405CB::getDataFromMemoryMap(const int id)
+ROM RS405CB::getDataFromROM(const int id)
 {
         std::vector<unsigned char> recv_data;
-        // get data from 0 (0x00) to 59 (0x3B) of memory map; that is, a length of 60 (0x3C)
+        // get data from 0 (0x00) to 29 (0x1D) of memory map; that is, the ROM
+	
+	const int result = sendAndReceiveShortPacket(id, recv_data, 0x03, 0x00, 0x00, 0x01);
+	if (result != 0) {
+	  std::cerr << "error getting data from memory map" << std::endl;
+	}
+        ROM regs;
+	memcpy(regs.BYTE, recv_data.data(), 30*sizeof(unsigned char));
+        return regs;
+}
 
-        const int result = sendAndReceiveShortPacket(id, recv_data, 0x0F, 0x00, 0x3C, 0x00);
-        RS405CB_t regs;
-        memcpy(regs.BYTE, recv_data.data(), 60*sizeof(unsigned char));
+RAM RS405CB::getDataFromRAM(const int id)
+{
+        std::vector<unsigned char> recv_data;
+        // get data from 30 (0x1E) to 59 (0x3B) of memory map; that is, the RAM
+	
+	const int result = sendAndReceiveShortPacket(id, recv_data, 0x05, 0x00, 0x00, 0x01);
+	if (result != 0) {
+	  std::cerr << "error getting data from memory map" << std::endl;
+	}
+        RAM regs;
+	memcpy(regs.BYTE, recv_data.data(), 30*sizeof(unsigned char));
         return regs;
 }
 

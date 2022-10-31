@@ -20,15 +20,7 @@ typedef union
 		SHORT_DATA    ModelNumber;
 		unsigned char FirmwareVersion;
 		unsigned char reserved;
-	} DATA;
-	unsigned char BYTE[4];
-} RO;
-
-typedef union
-{
-	struct
-	{
-		/* ROM */
+	        /* ROM */
 		unsigned char ServoID_RW;
 		unsigned char Reverse_RW;
 		unsigned char BaudRate_RW;
@@ -52,7 +44,7 @@ typedef union
 		unsigned char CCWComplianceSlope_RW;
 		SHORT_DATA    PUNCH_RW;
 	} DATA;
-	unsigned char BYTE[26];
+	unsigned char BYTE[30];
 } ROM;
 
 typedef union
@@ -89,7 +81,6 @@ typedef union
 {
 	struct 
 	{
-		RO  Ro;
 		ROM Rom;
 		RAM Ram;
 	} DATA;
