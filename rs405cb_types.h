@@ -85,7 +85,23 @@ typedef union
 		RAM Ram;
 	} DATA;
 	unsigned char BYTE[60];
-} RS405CB_t;
+} RS405CB_mem_t;
+
+typedef union
+{
+        struct
+        {
+                unsigned char temperature_limit_error:1;
+                unsigned char reserved1:1;
+                unsigned char temperature_limit_alarm:1;
+                unsigned char reserved2:1;
+                unsigned char flash_ROM_write_error:1;
+                unsigned char reserved3:1;
+                unsigned char receive_packet_parse_error:1;
+                unsigned char reserved4:1;
+        } DATA;
+        unsigned char BYTE;
+} RS405CB_flags_t;
 
 #endif /* _RS405CB_TYPES_H_ */
 

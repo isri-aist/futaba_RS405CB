@@ -32,14 +32,14 @@ public:
          * return: structure with read data
          * argument: servo id
          */
-        ROM getDataFromROM(const int);
+        RS405CB_flags_t getDataFromROM(const int, ROM &);
 
         /*
          * get the RAM memory map of the servo
          * return: structure with read data
          * argument: servo id
          */
-        RAM getDataFromRAM(const int);
+        RS405CB_flags_t getDataFromRAM(const int, RAM &);
         
 	/*
 	 * get temperature limit that turns of the servo
@@ -178,19 +178,10 @@ private:
 	SerialPort port;
 	int sendShortPacket(const int, unsigned char, unsigned char, unsigned char, unsigned char);
 	int sendShortPacket(const int, unsigned char, unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
-	int sendAndReceiveShortPacket(const int, std::vector<unsigned char> &, unsigned char, unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
-	int sendAndReceiveShortPacket(const int, std::vector<unsigned char> &, unsigned char, unsigned char, unsigned char, unsigned char);
+	RS405CB_flags_t sendAndReceiveShortPacket(const int, std::vector<unsigned char> &, unsigned char, unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
+	RS405CB_flags_t sendAndReceiveShortPacket(const int, std::vector<unsigned char> &, unsigned char, unsigned char, unsigned char, unsigned char);
 	int sendLongPacket(unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
-	int receivePacket(std::vector<unsigned char> &);
-
-public:
-	
-	bool isTemperatureError() { return flags & 0x80; }
-	bool isTemperatureAlarm() { return flags & 0x20; }
-
-private:
-
-	unsigned char flags;  // ToDo: associate it with id
+	RS405CB_flags_t receivePacket(std::vector<unsigned char> &);
 };
 
 #endif
