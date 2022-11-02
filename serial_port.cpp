@@ -1,12 +1,16 @@
 #include "serial_port.h"
+
+#include <cstring>
+#include <errno.h>
 #include <iostream>
-#include <string.h>
+#include <stdio.h>
+#include <sys/time.h>
 
 //#define VERBOSE
 
 SerialPort::SerialPort(const char * device_name, const int baudrate) : opened(false)
 {
-  fd = open(device_name, O_RDWR);
+  fd = open(device_name, O_RDWR | O_NONBLOCK);
   if(fd < 0)
   {
     std::cerr << "serial port open error. device name: " << device_name << std::endl;
@@ -23,7 +27,7 @@ SerialPort::SerialPort(const char * device_name, const int baudrate) : opened(fa
     tio.c_cflag += 0; // stop bit: 1bit
     tio.c_cflag += 0; // parity: none
 
-    int baud = B9600;
+    unsigned int baud = B9600;
     if(baudrate == 9600)
     {
       baud = B9600;
@@ -92,42 +96,83 @@ SerialPort::~SerialPort()
   }
 }
 
-int SerialPort::writeData(std::vector<unsigned char> data)
+bool SerialPort::writeData(const std::vector<unsigned char> & data, size_t & written, long timeout_ms)
 {
-#ifdef VERBOSE
-  std::cout << "send[" << data.size() << "]:";
-  for(unsigned int i = 0; i < data.size(); i++)
+  if(!opened)
   {
-    printf("%02x ", data[i]);
+    return false;
   }
-  printf("\n");
-#endif
-  if(opened)
-    return write(fd, data.data(), data.size());
-  else
-    return -1;
+  bool error = false;
+  auto handle_write = [&]() {
+    ssize_t write_result = write(fd, data.data(), data.size());
+    if(write_result == 0)
+    {
+      if(errno == EAGAIN)
+      {
+        return false;
+      }
+      error = true;
+      perror("write");
+      return true;
+    }
+    written = static_cast<size_t>(write_result);
+    return true;
+  };
+  struct timeval start_tv;
+  gettimeofday(&start_tv, nullptr);
+  struct timeval now_tv;
+  while(!handle_write())
+  {
+    gettimeofday(&now_tv, nullptr);
+    long elapsed_ms = (now_tv.tv_sec - start_tv.tv_sec) * 1000 + (now_tv.tv_usec - start_tv.tv_usec) / 1000;
+    if(elapsed_ms > timeout_ms)
+    {
+      std::cerr << "write timeout\n";
+      return false;
+    }
+  }
+  return !error;
 }
 
-int SerialPort::readData(std::vector<unsigned char> & data)
+bool SerialPort::readData(std::vector<unsigned char> & data, size_t & readOut, long timeout_ms)
 {
-  if(opened)
+  if(!opened)
   {
-    unsigned char buf[1024];
-    const int ret = read(fd, buf, sizeof(buf));
-#ifdef VERBOSE
-    std::cout << "recv[" << ret << "]:";
-    for(int i = 0; i < ret; i++)
+    return false;
+  }
+  if(data.size() < 1024)
+  {
+    data.resize(1024);
+  }
+  bool error = false;
+  auto try_read = [&]() {
+    ssize_t read_result = read(fd, data.data(), data.size());
+    if(read_result == 0)
     {
-      printf("%02x ", buf[i]);
+      if(errno == EAGAIN)
+      {
+        return false;
+      }
+      error = true;
+      perror("read");
+      return true;
     }
-    printf("\n");
-#endif
-    data = std::vector<unsigned char>(buf, buf + ret);
-    return ret;
-  }
-  else
+    readOut = static_cast<size_t>(read_result);
+    return true;
+  };
+  struct timeval start_tv;
+  gettimeofday(&start_tv, nullptr);
+  struct timeval now_tv;
+  while(!try_read())
   {
-    return -1;
+    gettimeofday(&now_tv, nullptr);
+    long elapsed_ms = (now_tv.tv_sec - start_tv.tv_sec) * 1000 + (now_tv.tv_usec - start_tv.tv_usec) / 1000;
+    if(elapsed_ms > timeout_ms)
+    {
+      std::cerr << "write timeout\n";
+      return false;
+    }
   }
+  return !error;
 }
 
