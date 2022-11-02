@@ -105,7 +105,7 @@ bool SerialPort::writeData(const std::vector<unsigned char> & data, size_t & wri
   bool error = false;
   auto handle_write = [&]() {
     ssize_t write_result = write(fd, data.data(), data.size());
-    if(write_result == 0)
+    if(write_result <= 0)
     {
       if(errno == EAGAIN)
       {
@@ -147,7 +147,7 @@ bool SerialPort::readData(std::vector<unsigned char> & data, size_t & readOut, l
   bool error = false;
   auto try_read = [&]() {
     ssize_t read_result = read(fd, data.data(), data.size());
-    if(read_result == 0)
+    if(read_result <= 0)
     {
       if(errno == EAGAIN)
       {
@@ -169,7 +169,7 @@ bool SerialPort::readData(std::vector<unsigned char> & data, size_t & readOut, l
     long elapsed_ms = (now_tv.tv_sec - start_tv.tv_sec) * 1000 + (now_tv.tv_usec - start_tv.tv_usec) / 1000;
     if(elapsed_ms > timeout_ms)
     {
-      std::cerr << "write timeout\n";
+      std::cerr << "read timeout\n";
       return false;
     }
   }

@@ -41,15 +41,14 @@ bool RS405CB::sendShortPacket(const int id,
                               unsigned char length,
                               unsigned char count)
 {
+  if(length != write_data.size())
+  {
+    std::cerr << "Coherence issue, length is " << length << " but write_data is " << write_data.size() << "\n";
+  }
   size_t header_size = 7;
   size_t tail_size = 1;
-  if(length != 0x00 && length != 0xff)
-  {
-    if(length < write_buffer.size() + header_size + tail_size)
-    {
-      write_buffer.resize(length + header_size + tail_size);
-    }
-  }
+  size_t write_expected = (write_data.size() + header_size + tail_size);
+  write_buffer.resize(write_expected);
 
   write_buffer[0] = 0xFA;
   write_buffer[1] = 0xAF;
@@ -75,7 +74,6 @@ bool RS405CB::sendShortPacket(const int id,
   write_buffer[write_buffer.size() - 1] = check_sum;
 
   bool success = port.writeData(write_buffer, write_size, timeout_ms);
-  size_t write_expected = (write_data.size() + header_size + tail_size);
   if(success && write_size != write_expected)
   {
     std::cerr << "Wrote less data (" << write_size << ") than expected (" << write_expected << ")\n";
@@ -128,7 +126,8 @@ bool RS405CB::receivePacket()
   }
   if(recv_buffer[0] != 0xFD || recv_buffer[1] != 0xDF)
   {
-    std::cerr << "Received the wrong header\n";
+    std::cout << "Received " << recv_size << " but received the wrong header\n";
+    fprintf(stderr, "Got %X and %X\n", recv_buffer[0], recv_buffer[1]);
     return false;
   }
   flags = recv_buffer[3];
@@ -166,6 +165,7 @@ bool RS405CB::receivePacket()
 
 bool RS405CB::getDataFromROM(const int id, ROM & rom)
 {
+  write_data.resize(0);
   // get data from 0 (0x00) to 29 (0x1D) of memory map; that is, the ROM
   if(!sendAndReceiveShortPacket(id, 0x03, 0x00, 0x00, 0x01))
   {
@@ -177,6 +177,7 @@ bool RS405CB::getDataFromROM(const int id, ROM & rom)
 
 bool RS405CB::getDataFromRAM(const int id, RAM & ram)
 {
+  write_data.resize(0);
   // get data from 30 (0x1E) to 59 (0x3B) of memory map; that is, the RAM
   if(!sendAndReceiveShortPacket(id, 0x05, 0x00, 0x00, 0x01))
   {
@@ -188,6 +189,7 @@ bool RS405CB::getDataFromRAM(const int id, RAM & ram)
 
 bool RS405CB::getTemperatureLimit(const int id, int & out)
 {
+  write_data.resize(0);
   // get number from 0 to 29 of memory map
   if(!sendAndReceiveShortPacket(id, 0x03, 0x00, 0x00, 0x01))
   {
@@ -199,6 +201,7 @@ bool RS405CB::getTemperatureLimit(const int id, int & out)
 
 bool RS405CB::getVoltage(const int id, double & out)
 {
+  write_data.resize(0);
   // get number from 42 to 59 of memory map
   if(!sendAndReceiveShortPacket(id, 0x09, 0x00, 0x00, 0x01))
   {
@@ -210,6 +213,7 @@ bool RS405CB::getVoltage(const int id, double & out)
 
 bool RS405CB::getTemperature(const int id, int & out)
 {
+  write_data.resize(0);
   // get number from 42 to 59 of memory map
   if(!sendAndReceiveShortPacket(id, 0x09, 0x00, 0x00, 0x01))
   {
@@ -221,6 +225,7 @@ bool RS405CB::getTemperature(const int id, int & out)
 
 bool RS405CB::getLoad(const int id, int & out)
 {
+  write_data.resize(0);
   // get number from 42 to 59 of memory map
   if(!sendAndReceiveShortPacket(id, 0x09, 0x00, 0x00, 0x01))
   {
@@ -232,6 +237,7 @@ bool RS405CB::getLoad(const int id, int & out)
 
 bool RS405CB::getAngle(const int id, double & out)
 {
+  write_data.resize(0);
   // get number from 42 to 59 of memory map
   if(!sendAndReceiveShortPacket(id, 0x09, 0x00, 0x00, 0x01))
   {
@@ -255,6 +261,7 @@ bool RS405CB::setTorque(const int id, bool torque_on)
 bool RS405CB::getTorqueEnable(const int id, bool & out)
 {
   // get number from 30 to 41 of memory map
+  write_data.resize(0);
   if(!sendAndReceiveShortPacket(id, 0x0B, 0x00, 0x00, 0x01))
   {
     return false;
@@ -331,6 +338,7 @@ bool RS405CB::setMovingTime(const int id, double time)
 
 bool RS405CB::storeDataToROM(const int id)
 {
+  write_data.resize(0);
   bool return_value = sendShortPacket(id, 0x40, 0xff, 0x00, 0x00);
   sleep(1);
   return return_value;
@@ -338,6 +346,7 @@ bool RS405CB::storeDataToROM(const int id)
 
 bool RS405CB::reboot(const int id)
 {
+  write_data.resize(0);
   bool out = sendShortPacket(id, 0x20, 0xff, 0x00, 0x00);
   sleep(1);
   return out;
