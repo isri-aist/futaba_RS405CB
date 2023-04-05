@@ -173,6 +173,10 @@ public:
 
         int setMaxTorque(const int, const unsigned char);
 
+	int setGoalSpeed(const int, signed short); // For BLA21-12M-C01
+
+	int setGoalTorque(const int, unsigned short); // For BLA21-12M-C01
+
 	int readACK();
 	bool isOpen() { return port.isOpen(); }
 private:

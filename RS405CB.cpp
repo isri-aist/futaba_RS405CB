@@ -384,3 +384,27 @@ int RS405CB::setMaxTorque(const int id, const unsigned char percentage)
 	readACK();
 	return ret;
 }
+
+int RS405CB::setGoalSpeed(const int id, signed short rpm)
+{
+	std::vector<unsigned char> data;
+	rpm = std::max<double>(rpm, -100);
+	rpm = std::min<double>(rpm, 100);
+	data.push_back(rpm & 0xff);
+	data.push_back(rpm >> 8);
+	const int ret = sendShortPacket(id, 0x01, 0x25, 0x02, 0x01, data);
+	readACK();
+	return ret;
+}
+
+int RS405CB::setGoalTorque(const int id, unsigned short percentage)
+{
+	std::vector<unsigned char> data;
+	percentage = std::max<double>(percentage, 0);
+	percentage = std::min<double>(percentage, 100);
+	data.push_back(percentage & 0xff);
+	data.push_back(percentage >> 8);
+	const int ret = sendShortPacket(id, 0x01, 0x27, 0x02, 0x01, data);
+	readACK();
+	return ret;
+}
