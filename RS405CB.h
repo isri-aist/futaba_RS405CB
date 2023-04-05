@@ -3,8 +3,9 @@
 
 #include <vector>
 #include <utility>
-#include "serial_port.h"
 #include "rs405cb_types.h"
+
+#include <serial/serial.h>
 
 enum RS405CB_BAUDRATE
 {
@@ -175,13 +176,13 @@ public:
 	int readACK();
 	bool isOpen() { return port.isOpen(); }
 private:
-	SerialPort port;
+	serial::Serial port;
 	int sendShortPacket(const int, unsigned char, unsigned char, unsigned char, unsigned char);
 	int sendShortPacket(const int, unsigned char, unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
 	int sendAndReceiveShortPacket(const int, std::vector<unsigned char> &, unsigned char, unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
 	int sendAndReceiveShortPacket(const int, std::vector<unsigned char> &, unsigned char, unsigned char, unsigned char, unsigned char);
 	int sendLongPacket(unsigned char, unsigned char, unsigned char, std::vector<unsigned char>);
-	int receivePacket(std::vector<unsigned char> &);
+	int receivePacket(std::vector<unsigned char> &, size_t);
 
 public:
 	

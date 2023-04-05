@@ -4,8 +4,13 @@
 #include <algorithm>
 #include "RS405CB.h"
 
-RS405CB::RS405CB(const char *serial_port_device_name, const int baudrate) : port(serial_port_device_name, baudrate)
+RS405CB::RS405CB(const char *serial_port_device_name, const int baudrate) : port(serial_port_device_name, baudrate, serial::Timeout::simpleTimeout(100))
 {
+        if(!port.isOpen())
+	{
+	        std::cerr << "Failed to open " << serial_port_device_name << " at " << baudrate << " rate\n";
+		throw std::runtime_error("Failed to open");
+	}
 }
 
 RS405CB::~RS405CB()
@@ -22,7 +27,7 @@ int RS405CB::sendAndReceiveShortPacket(const int id, std::vector<unsigned char> 
 {
 	const int ret = sendShortPacket(id, flag, address, length, count, data);
 	if(ret > 0) {
-		if(receivePacket(recv_data) == 0)
+		if(receivePacket(recv_data, recv_data.size()) == 0)
 			return 0;
 	}
 
@@ -37,8 +42,8 @@ int RS405CB::sendShortPacket(const int id, unsigned char flag, unsigned char add
 
 int RS405CB::readACK()
 {
-  std::vector<unsigned char> recv_buf;
-  const int len = port.readData(recv_buf);
+  std::vector<unsigned char> recv_buf(1);
+  const int len = port.read(recv_buf.data(), 1);
   return len;
 }
 
@@ -70,8 +75,7 @@ int RS405CB::sendShortPacket(const int id, unsigned char flag, unsigned char add
 	}
 	buf.push_back(check_sum);
 
-	const int write_len = port.writeData(buf);
-
+	const int write_len = port.write(buf);
 	return write_len;
 }
 
@@ -97,17 +101,18 @@ int RS405CB::sendLongPacket(unsigned char address, unsigned char length, unsigne
 	}
 	buf.push_back(check_sum);
 
-	const int write_len = port.writeData(buf);
+	const int write_len = port.write(buf);
 	return write_len;
 }
 
-int RS405CB::receivePacket(std::vector<unsigned char> &data)
+int RS405CB::receivePacket(std::vector<unsigned char> &data, size_t expected)
 {
 	data.clear();
-	std::vector<unsigned char> recv_buf;
-	const int len = port.readData(recv_buf);
+	std::vector<unsigned char> recv_buf(expected + 8);
+	const int len = port.read(recv_buf.data(), expected + 8);
 	if(len >= 6) {
 		if(recv_buf[0] != 0xFD || recv_buf[1] != 0xDF) {
+		        std::cerr << "Wrong control?\n";
 			return 1;
 		}
 		flags = recv_buf[3];
@@ -142,7 +147,7 @@ int RS405CB::receivePacket(std::vector<unsigned char> &data)
 
 ROM RS405CB::getDataFromROM(const int id)
 {
-        std::vector<unsigned char> recv_data;
+        std::vector<unsigned char> recv_data(30);
         // get data from 0 (0x00) to 29 (0x1D) of memory map; that is, the ROM
 	
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x03, 0x00, 0x00, 0x01);
@@ -156,7 +161,7 @@ ROM RS405CB::getDataFromROM(const int id)
 
 RAM RS405CB::getDataFromRAM(const int id)
 {
-        std::vector<unsigned char> recv_data;
+        std::vector<unsigned char> recv_data(30);
         // get data from 30 (0x1E) to 59 (0x3B) of memory map; that is, the RAM
 	
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x05, 0x00, 0x00, 0x01);
@@ -170,7 +175,7 @@ RAM RS405CB::getDataFromRAM(const int id)
 
 int RS405CB::getTemperatureLimit(const int id)
 {
-	std::vector<unsigned char> recv_data;
+	std::vector<unsigned char> recv_data(30);
 	// get number from 0 to 29 of memory map
 	
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x03, 0x00, 0x00, 0x01);
@@ -185,7 +190,7 @@ int RS405CB::getTemperatureLimit(const int id)
 
 double RS405CB::getVoltage(const int id)
 {
-	std::vector<unsigned char> recv_data;
+	std::vector<unsigned char> recv_data(18);
 	// get number from 42 to 59 of memory map
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x09, 0x00, 0x00, 0x01);
 	if(result != 0) {
@@ -198,7 +203,7 @@ double RS405CB::getVoltage(const int id)
 
 int RS405CB::getTemperature(const int id)
 {
-	std::vector<unsigned char> recv_data;
+	std::vector<unsigned char> recv_data(18);
 	// get number from 42 to 59 of memory map
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x09, 0x00, 0x00, 0x01);
 	if(result != 0) {
@@ -211,7 +216,7 @@ int RS405CB::getTemperature(const int id)
 
 int RS405CB::getLoad(const int id)
 {
-	std::vector<unsigned char> recv_data;
+	std::vector<unsigned char> recv_data(18);
 	// get number from 42 to 59 of memory map
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x09, 0x00, 0x00, 0x01);
 	if(result != 0) {
@@ -224,7 +229,7 @@ int RS405CB::getLoad(const int id)
 
 double RS405CB::getAngle(const int id)
 {
-	std::vector<unsigned char> recv_data;
+	std::vector<unsigned char> recv_data(18);
 	// get number from 42 to 59 of memory map
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x09, 0x00, 0x00, 0x01);
 	if(result != 0) {
@@ -250,7 +255,7 @@ int RS405CB::setTorque(const int id, bool torque_on)
 
 int RS405CB::getTorqueEnable(const int id)
 {
-	std::vector<unsigned char> recv_data;
+	std::vector<unsigned char> recv_data(12);
 	// get number from 30 to 41 of memory map
 	const int result = sendAndReceiveShortPacket(id, recv_data, 0x0B, 0x00, 0x00, 0x01);
 	if(result != 0) {
@@ -379,4 +384,3 @@ int RS405CB::setMaxTorque(const int id, const unsigned char percentage)
 	readACK();
 	return ret;
 }
-

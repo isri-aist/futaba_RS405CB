@@ -13,14 +13,15 @@ set(CXX_DISABLE_WERROR ON)
 include(cmake/base.cmake)
 project(${PROJECT_NAME} LANGUAGES CXX)
 
+pkg_check_modules(serial REQUIRED serial IMPORTED_TARGET)
+set(PACKAGE_EXTRA_MACROS "pkg_check_modules(serial REQUIRED serial IMPORTED_TARGET)")
+
 set(headers
-  serial_port.h
   RS405CB.h
   rs405cb_types.h
   )
 
 set(sources
-  serial_port.cpp
   RS405CB.cpp
   )
 
@@ -28,6 +29,7 @@ set(target rs405cb)
 add_library(${target} SHARED ${sources})
 target_include_directories(${target} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include> $<INSTALL_INTERFACE:include/RS405CB>)
 set_target_properties(${target} PROPERTIES EXPORT_NAME ${PROJECT_NAME})
+target_link_libraries(${target} PUBLIC PkgConfig::serial)
 
 install(FILES ${headers} DESTINATION include/RS405CB)
 install(TARGETS ${target} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION "${CMAKE_INSTALL_LIBDIR}")
